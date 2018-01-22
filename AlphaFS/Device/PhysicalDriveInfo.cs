@@ -57,10 +57,18 @@ namespace Alphaleonis.Win32.Filesystem
       /// <summary>The device type of the physical drive.</summary>
       public StorageDeviceType DeviceType { get; internal set; }
 
-
+      
       /// <summary>The index number of the physical drive.</summary>
       public int DeviceNumber { get; internal set; }
 
+
+      /// <summary>The direct disk access (RAW I/O) path of the physical drive.</summary>
+      public string RawPath { get; internal set; }
+
+
+      /// <summary>The logical drive letter that maps the physical drive.</summary>
+      public string LogicalDrive { get; internal set; }
+      
 
       /// <summary>Indicates the partition number of the device is returned in this member, if the device can be partitioned. Otherwise, -1 is returned.</summary>
       public int PartitionNumber { get; internal set; }
@@ -75,10 +83,10 @@ namespace Alphaleonis.Win32.Filesystem
       public bool IsRemovable { get; internal set; }
 
 
-      /// <summary>Returns the product ID of the physical drive.</summary>
+      /// <summary>Returns the product ID or, when not available, the <see cref="RawPath"/> of the physical drive.</summary>
       public string Name
       {
-         get { return _productID ?? string.Empty; }
+         get { return _productID ?? RawPath; }
 
          internal set { _productID = value; }
       }
@@ -105,10 +113,8 @@ namespace Alphaleonis.Win32.Filesystem
          internal set
          {
             // SanDisk X400 M.2 2280 256GB reports VendorID as: "("
-            // DeviceInfo.Manufacturer = "(Standard disk drives)" might be a hint?
 
-            if (null != value)
-               _vendorID = value.Length > 1 ? value : string.Empty;
+            _vendorID = null != value && value.Length > 1 ? value : string.Empty;
          }
       }
    }

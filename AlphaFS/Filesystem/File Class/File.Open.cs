@@ -305,6 +305,7 @@ namespace Alphaleonis.Win32.Filesystem
       
       #endregion // Using FileAccess
 
+
       #region Using FileSystemRights
 
       /// <summary>[AlphaFS] Opens a <see cref="FileStream"/> on the specified path using the specified creation mode, read/write and sharing permission, and buffer size.</summary>
@@ -500,6 +501,7 @@ namespace Alphaleonis.Win32.Filesystem
       {
          return OpenCore(transaction, path, mode, mode == FileMode.Append ? FileAccess.Write : FileAccess.ReadWrite, FileShare.None, ExtendedFileAttributes.Normal, null, null, pathFormat);
       }
+
 
       #region Using FileAccess
 
@@ -770,6 +772,7 @@ namespace Alphaleonis.Win32.Filesystem
 
       #endregion // Using FileAccess
 
+
       #region Using FileSystemRights
 
       /// <summary>[AlphaFS] (Transacted) Opens a <see cref="FileStream"/> on the specified path using the specified creation mode, read/write and sharing permission, and buffer size.</summary>
@@ -968,6 +971,7 @@ namespace Alphaleonis.Win32.Filesystem
          return OpenCore(transaction, path, mode, rights, share, attributes, bufferSize, security, pathFormat);
       }
 
+
       /// <summary>Opens a <see cref="FileStream"/> on the specified path, having the specified mode with read, write, or read/write access, the specified sharing option and additional options specified.</summary>
       /// <param name="transaction">The transaction.</param>
       /// <param name="path">The file to open.</param>
@@ -1001,8 +1005,7 @@ namespace Alphaleonis.Win32.Filesystem
          }
          catch
          {
-            if (null != safeHandle)
-               safeHandle.Dispose();
+            NativeMethods.IsValidHandle(safeHandle, false);
 
             throw;
          }

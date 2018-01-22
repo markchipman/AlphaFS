@@ -26,33 +26,40 @@ using System.Security;
 
 namespace Alphaleonis.Win32.Filesystem
 {
-   public sealed partial class DriveInfo
+   public static partial class Device
    {
       /// <summary>[AlphaFS] Gets the physical drive number that is related to the logical drive.</summary>
-      /// <param name="driveLetter">The drive letter, such as C, D.</param>
-      /// <returns>The physical drive number that is related to the logical drive or -1 when the logical drive is mapped network drive or CDRom.</returns>
+      /// <returns>The physical drive number that is related to the logical drive, or -1 when the logical drive is a mapped network drive or CDRom.</returns>
       /// <exception cref="ArgumentException"/>
       /// <exception cref="ArgumentNullException"/>
       /// <exception cref="NotSupportedException"/>
       /// <exception cref="Exception"/>
+      /// <param name="driveLetter">The logical drive letter, such as C, D.</param>
       [SecurityCritical]
       public static int GetPhysicalDriveNumber(char driveLetter)
       {
-         return GetPhysicalDriveInfoCore(driveLetter).DeviceNumber;
+         var info = GetPhysicalDriveInfoCore(driveLetter, null);
+
+         return null != info ? info.DeviceNumber : -1;
       }
 
 
 
 
       /// <summary>Gets the physical drive number that is related to the logical drive.</summary>
-      /// <returns>The physical drive number that is related to the logical drive or -1 when the logical drive is mapped network drive or CDRom.</returns>
+      /// <returns>The physical drive number that is related to the logical drive, or -1 when the logical drive is a mapped network drive or CDRom.</returns>
       /// <exception cref="ArgumentException"/>
       /// <exception cref="ArgumentNullException"/>
       /// <exception cref="NotSupportedException"/>
       /// <exception cref="Exception"/>
+      /// <param name="driveLetter">The logical drive letter, such as C, D.</param>
       [SecurityCritical]
       internal static NativeMethods.STORAGE_DEVICE_NUMBER? GetPhysicalDriveNumberCore(char driveLetter)
       {
+         if (!char.IsLetter(driveLetter))
+            throw new ArgumentException(Resources.Argument_must_be_a_drive_letter_from_a_z, "driveLetter");
+
+
          // dwDesiredAccess: If this parameter is zero, the application can query certain metadata such as file, directory, or device attributes
          // without accessing that file or device, even if GENERIC_READ access would have been denied.
          // You cannot request an access mode that conflicts with the sharing mode that is specified by the dwShareMode parameter in an open request that already has an open handle.
@@ -64,15 +71,12 @@ namespace Alphaleonis.Win32.Filesystem
          //const bool elevatedAccess = (dwDesiredAccess & FileSystemRights.Read) != 0 && (dwDesiredAccess & FileSystemRights.Write) != 0;
 
 
-         var physicalDrive = string.Format(CultureInfo.InvariantCulture, "{0}{1}{2}", Path.LogicalDrivePrefix, driveLetter.ToString(CultureInfo.InvariantCulture), Path.VolumeSeparator);
+         var physicalDrive = string.Format(CultureInfo.InvariantCulture, "{0}{1}{2}", Path.LogicalDrivePrefix, driveLetter.ToString(), Path.VolumeSeparator);
 
 
-         using (var safeHandle = File.CreateFileCore(null, physicalDrive, ExtendedFileAttributes.Normal, null, FileMode.Open, dwDesiredAccess, FileShare.ReadWrite, false, false, PathFormat.LongFullPath))
-         {
-            using (var safeBuffer = Device.GetDeviceIoData<NativeMethods.STORAGE_DEVICE_NUMBER>(safeHandle, NativeMethods.IoControlCode.IOCTL_STORAGE_GET_DEVICE_NUMBER, physicalDrive))
+         using (var safeHandle = File.OpenPhysicalDrive(physicalDrive, dwDesiredAccess))
 
-               return safeBuffer.PtrToStructure<NativeMethods.STORAGE_DEVICE_NUMBER>(0);
-         }
+            return GetDeviceIoData<NativeMethods.STORAGE_DEVICE_NUMBER>(safeHandle, physicalDrive);
       }
    }
 }

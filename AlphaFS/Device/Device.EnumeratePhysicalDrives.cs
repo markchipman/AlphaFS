@@ -19,43 +19,22 @@
  *  THE SOFTWARE. 
  */
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+using System.Collections.Generic;
+using System.Security;
 
-namespace AlphaFS.UnitTest
+namespace Alphaleonis.Win32.Filesystem
 {
-   public partial class AlphaFS_DeviceTest
+   public static partial class Device
    {
-      // Pattern: <class>_<function>_<scenario>_<expected result>
-
-
-      [TestMethod]
-      public void AlphaFS_DeviceInfo_InitializeInstance_Local_Success()
+      /// <summary>[AlphaFS] Enumerates the drive names of all physical drives on the Computer.</summary>
+      /// <returns>An IEnumerable of type <see cref="DriveInfo"/> that represents the physical drives on the Computer.</returns>      
+      [SecurityCritical]
+      public static IEnumerable<PhysicalDriveInfo> EnumeratePhysicalDrives()
       {
-         Console.WriteLine("\nMSDN Note: Beginning in Windows 8 and Windows Server 2012 functionality to access remote machines has been removed.");
-         Console.WriteLine("You cannot access remote machines when running on these versions of Windows.\n");
-
-         DeviceInfo_InitializeInstance(false);
-         //DeviceInfo_InitializeInstance(true);
-      }
-
-
-
-
-      private void DeviceInfo_InitializeInstance(bool isNetwork)
-      {
-         UnitTestConstants.PrintUnitTestHeader(isNetwork);
-
-         var deviceInfo = new Alphaleonis.Win32.Filesystem.DeviceInfo(isNetwork ? UnitTestConstants.LocalHost : string.Empty);
-
-         UnitTestConstants.Dump(deviceInfo, -24);
-
-         Assert.AreEqual(deviceInfo.HostName, UnitTestConstants.LocalHost);
-         Assert.AreEqual(deviceInfo.DeviceClass, null);
-         Assert.AreEqual(deviceInfo.ClassGuid, new Guid());
-
-         
-         Console.WriteLine();
+         foreach (var deviceInfo in EnumerateDevicesCore(null, null, DeviceGuid.Disk, false))
+         {
+            yield return GetPhysicalDriveInfoCore(null, deviceInfo);
+         }
       }
    }
 }

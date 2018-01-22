@@ -52,7 +52,7 @@ namespace AlphaFS.UnitTest
             drive = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(UnitTestConstants.SysDrive);
 
 
-         Console.WriteLine("Input Drive Path: [{0}]", drive);
+         Console.WriteLine("Input Logical Drive: [{0}]", drive);
 
 
          var actual = new Alphaleonis.Win32.Filesystem.DriveInfo(drive);

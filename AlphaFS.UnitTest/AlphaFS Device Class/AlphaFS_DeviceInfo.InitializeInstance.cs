@@ -19,47 +19,43 @@
  *  THE SOFTWARE. 
  */
 
-using System;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 
 namespace AlphaFS.UnitTest
 {
-   public partial class DriveInfoTest
+   public partial class AlphaFS_DeviceTest
    {
       // Pattern: <class>_<function>_<scenario>_<expected result>
 
-      
+
       [TestMethod]
-      public void DriveInfo_EnumeratePhysicalDrives_Local_Success()
+      public void AlphaFS_DeviceInfo_InitializeInstance_Local_Success()
       {
+         DeviceInfo_InitializeInstance(false);
+      }
+
+
+
+
+      private void DeviceInfo_InitializeInstance(bool isNetwork)
+      {
+         Console.WriteLine("MSDN Note: Beginning in Windows 8 and Windows Server 2012 functionality to access remote machines has been removed.");
+         Console.WriteLine("You cannot access remote machines when running on these versions of Windows.");
+
          UnitTestConstants.PrintUnitTestHeader(false);
-      
+
+
+         var deviceInfo = new Alphaleonis.Win32.Filesystem.DeviceInfo(isNetwork ? UnitTestConstants.LocalHost : string.Empty);
+
+         UnitTestConstants.Dump(deviceInfo, -24);
+
+         Assert.AreEqual(deviceInfo.HostName, UnitTestConstants.LocalHost);
+         Assert.AreEqual(deviceInfo.DeviceClass, null);
+         Assert.AreEqual(deviceInfo.ClassGuid, new Guid());
+
          
-         var drives = Alphaleonis.Win32.Filesystem.DriveInfo.EnumeratePhysicalDrives().ToList();
-
-         foreach (var drive in drives)
-         {
-            UnitTestConstants.Dump(drive, -21);
-
-
-            if (null != drive.PhysicalDriveInfo)
-               UnitTestConstants.Dump(drive.PhysicalDriveInfo, -23, true);
-
-            if (null != drive.DiskSpaceInfo)
-               UnitTestConstants.Dump(drive.DiskSpaceInfo, -26, true);
-
-            if (null != drive.DiskSpaceInfo)
-               UnitTestConstants.Dump(drive.DiskSpaceInfo, -26, true);
-
-
-            Console.WriteLine();
-         }
-
-
-         Assert.IsTrue(drives.Count > 0);
-
-         Assert.AreEqual(drives[0].Name[0], UnitTestConstants.SysDrive[0]);
+         Console.WriteLine();
       }
    }
 }

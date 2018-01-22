@@ -199,12 +199,11 @@ namespace AlphaFS.UnitTest
 
 
       [TestMethod]
-      public void AlphaFS_Volume_GetUniqueVolumeNameForPath()
+      public void AlphaFS_Volume_GetUniqueVolumeNameForPath_Local()
       {
          Console.WriteLine("Volume.GetUniqueVolumeNameForPath()");
 
          DumpGetUniqueVolumeNameForPath(true);
-         DumpGetUniqueVolumeNameForPath(false);
       }
 
 

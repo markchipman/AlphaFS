@@ -259,4 +259,7 @@
   <data name="No_Drive_Letters_Available" xml:space="preserve">
     <value>No drive letters available.</value>
   </data>
+   <data name="Argument_must_be_a_drive_letter_from_a_z" xml:space="preserve">
+    <value>Argument must be a drive letter from a-z.</value>
+  </data>
 </root>

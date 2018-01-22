@@ -20,15 +20,16 @@
  */
 
 using System;
+using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.AccessControl;
+using Microsoft.Win32.SafeHandles;
 
 namespace Alphaleonis.Win32.Filesystem
 {
-   public sealed partial class DriveInfo
+   public static partial class Device
    {
       /// <summary>[AlphaFS] Gets the hardware information such as the serial number, Vendor ID, Product ID.</summary>
       /// <returns>A <see cref="PhysicalDriveInfo"/> instance that represents the physical drives on the Computer.</returns>      
@@ -40,10 +41,8 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static PhysicalDriveInfo GetPhysicalDriveInfo(char driveLetter)
       {
-         return GetPhysicalDriveInfoCore(driveLetter);
+         return GetPhysicalDriveInfoCore(driveLetter, null);
       }
-
-
 
 
       /// <summary>Gets the hardware information such as the serial number, Vendor ID, Product ID.</summary>
@@ -52,11 +51,36 @@ namespace Alphaleonis.Win32.Filesystem
       /// <exception cref="ArgumentNullException"/>
       /// <exception cref="NotSupportedException"/>
       /// <exception cref="Exception"/>
-      /// <param name="driveLetter">The drive letter, such as C, D.</param>
+      /// <param name="driveLetter"></param>
+      /// <param name="deviceInfo"></param>
       [SecurityCritical]
-      internal static PhysicalDriveInfo GetPhysicalDriveInfoCore(char driveLetter)
+      internal static PhysicalDriveInfo GetPhysicalDriveInfoCore(char? driveLetter, DeviceInfo deviceInfo)
       {
-         var driveNumber = GetPhysicalDriveNumberCore(driveLetter);
+         // dwDesiredAccess: If this parameter is zero, the application can query certain metadata such as file, directory, or device attributes
+         // without accessing that file or device, even if GENERIC_READ access would have been denied.
+         // You cannot request an access mode that conflicts with the sharing mode that is specified by the dwShareMode parameter in an open request that already has an open handle.
+         //const int dwDesiredAccess = 0;
+
+         // Requires elevation for: TotalNumberOfBytes
+         const FileSystemRights dwDesiredAccess = FileSystemRights.Read | FileSystemRights.Write;
+
+         const bool elevatedAccess = (dwDesiredAccess & FileSystemRights.Read) != 0 && (dwDesiredAccess & FileSystemRights.Write) != 0;
+
+
+         SafeFileHandle safeHandle = null;
+         NativeMethods.STORAGE_DEVICE_NUMBER? driveNumber = null;
+
+
+         if (driveLetter.HasValue)
+            driveNumber = GetPhysicalDriveNumberCore((char) driveLetter);
+
+         else if (null != deviceInfo)
+         {
+            safeHandle = File.OpenPhysicalDrive(deviceInfo.DevicePath, dwDesiredAccess);
+
+            driveNumber = GetDeviceIoData<NativeMethods.STORAGE_DEVICE_NUMBER>(safeHandle, deviceInfo.DevicePath);
+         }
+
 
          if (!driveNumber.HasValue)
             return null;
@@ -69,27 +93,20 @@ namespace Alphaleonis.Win32.Filesystem
          var info = new PhysicalDriveInfo
          {
             DeviceNumber = deviceNumber.DeviceNumber,
+            LogicalDrive = driveLetter.HasValue ? driveLetter.Value.ToString() + Path.VolumeSeparator +Path.DirectorySeparator : string.Empty,
+            RawPath = physicalDrive,
             DeviceType = deviceNumber.DeviceType,
             PartitionNumber = deviceNumber.PartitionNumber
          };
 
 
-         // dwDesiredAccess: If this parameter is zero, the application can query certain metadata such as file, directory, or device attributes
-         // without accessing that file or device, even if GENERIC_READ access would have been denied.
-         // You cannot request an access mode that conflicts with the sharing mode that is specified by the dwShareMode parameter in an open request that already has an open handle.
-         //const int dwDesiredAccess = 0;
-
-         // Requires elevation for: TotalNumberOfBytes
-         const FileSystemRights dwDesiredAccess = FileSystemRights.Read | FileSystemRights.Write;
-
-         const bool elevatedAccess = (dwDesiredAccess & FileSystemRights.Read) != 0 && (dwDesiredAccess & FileSystemRights.Write) != 0;
 
 
-         using (var safeHandle = File.CreateFileCore(null, physicalDrive, ExtendedFileAttributes.Normal, null, FileMode.Open, dwDesiredAccess, FileShare.ReadWrite, false, false, PathFormat.LongFullPath))
+         if (null == safeHandle)
+            safeHandle = File.OpenPhysicalDrive(physicalDrive, dwDesiredAccess);
+
+         using (safeHandle)
          {
-            //var allPhysicalDrives = EnumerateDevicesCore(null, null, DeviceGuid.Disk, false).ToList();
-
-
             uint bytesReturned;
 
             var storagePropertyQuery = new NativeMethods.STORAGE_PROPERTY_QUERY
@@ -99,23 +116,33 @@ namespace Alphaleonis.Win32.Filesystem
             };
 
 
-            using (var safeBuffer = Device.InvokeDeviceIoData(safeHandle, NativeMethods.IoControlCode.IOCTL_STORAGE_QUERY_PROPERTY, storagePropertyQuery, physicalDrive, NativeMethods.DefaultFileBufferSize / 4))
+            using (var safeBuffer = InvokeDeviceIoData(safeHandle, NativeMethods.IoControlCode.IOCTL_STORAGE_QUERY_PROPERTY, storagePropertyQuery, physicalDrive, NativeMethods.DefaultFileBufferSize / 4))
             {
                var storageDescriptor = safeBuffer.PtrToStructure<NativeMethods.STORAGE_DEVICE_DESCRIPTOR>(0);
 
 
-               info.BusType = (StorageBusType)storageDescriptor.BusType;
+               info.BusType = (StorageBusType) storageDescriptor.BusType;
 
                info.IsRemovable = storageDescriptor.RemovableMedia;
 
                info.SupportsCommandQueueing = storageDescriptor.CommandQueueing;
 
 
-               info.VendorID = safeBuffer.PtrToStringAnsi((int)storageDescriptor.VendorIdOffset).Trim();
+               info.VendorID = safeBuffer.PtrToStringAnsi((int) storageDescriptor.VendorIdOffset).Trim();
 
-               info.Name = safeBuffer.PtrToStringAnsi((int)storageDescriptor.ProductIdOffset).Trim();
+               info.ProductRevision = safeBuffer.PtrToStringAnsi((int) storageDescriptor.ProductRevisionOffset).Trim();
 
-               info.ProductRevision = safeBuffer.PtrToStringAnsi((int)storageDescriptor.ProductRevisionOffset).Trim();
+
+               // "FriendlyName" usually contains the name as shown in Windows Explorer, so let's use that.
+
+               info.Name = null != deviceInfo && !Utils.IsNullOrWhiteSpace(deviceInfo.FriendlyName)
+                  ? deviceInfo.FriendlyName
+                  : safeBuffer.PtrToStringAnsi((int) storageDescriptor.ProductIdOffset).Trim();
+
+
+               //info.InstanceID = null != deviceInfo && !Utils.IsNullOrWhiteSpace(deviceInfo.InstanceID)
+               //   ? deviceInfo.InstanceID
+               //   : string.Empty;
 
 
                long serial;
@@ -140,7 +167,30 @@ namespace Alphaleonis.Win32.Filesystem
          }
 
 
+         // "FriendlyName" usually contains the name as shown in Windows Explorer, so let's use that.
+
+         if (null == deviceInfo)
+            SetDeviceFriendlyName(info);
+
+
          return info;
+      }
+
+
+      [SecurityCritical]
+      private static void SetDeviceFriendlyName(PhysicalDriveInfo info)
+      {
+         foreach (var deviceInfo in EnumerateDevicesCore(null, null, DeviceGuid.Disk))
+         {
+            //if (null != deviceInfo.InstanceID && deviceInfo.InstanceID.Equals(info.InstanceID, StringComparison.OrdinalIgnoreCase))
+            //{
+            //   if (!Utils.IsNullOrWhiteSpace(deviceInfo.FriendlyName))
+            //   {
+            //      info.Name = deviceInfo.FriendlyName;
+            //      return;
+            //   }
+            //}
+         }
       }
    }
 }

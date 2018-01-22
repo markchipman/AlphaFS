@@ -37,98 +37,98 @@ namespace Alphaleonis.Win32.Filesystem
       {
          //try
          //{
-         switch (type)
-         {
-            #region Volume
+            switch (type)
+            {
+               #region Volume
 
-            // VolumeInfo properties.
-            case 0:
-               if (Utils.IsNullOrWhiteSpace(_volumeInfo.FullPath))
-                  _volumeInfo.Refresh();
-
-
-               switch (mode)
-               {
-                  case 0:
-                     // IsVolume, VolumeInfo
-                     return _volumeInfo;
+               // VolumeInfo properties.
+               case 0:
+                  if (Utils.IsNullOrWhiteSpace(_volumeInfo.FullPath))
+                     _volumeInfo.Refresh();
 
 
-                  case 1:
-                     // DriveFormat
-                     return null == _volumeInfo ? DriveType.Unknown.ToString() : _volumeInfo.FileSystemName ?? DriveType.Unknown.ToString();
-
-
-                  case 2:
-                     // VolumeLabel
-                     return null == _volumeInfo ? String.Empty : _volumeInfo.Name ?? String.Empty;
-
-                  case 3:
-                     // DriveType
-                     return null == _volumeInfo ? (object)String.Empty : _volumeInfo.DriveType;
-               }
-
-               break;
-
-
-            // Volume related.
-            case 1:
-               if (mode == 0)
-               {
-                  // DosDeviceName
-                  return _dosDeviceName ?? (_dosDeviceName = Volume.QueryDosDevice(_name).FirstOrDefault());
-               }
-
-               break;
-
-            #endregion // Volume
-
-
-            #region Drive
-
-            // Drive related.
-            case 2:
-               if (mode == 0)
-               {
-                  // RootDirectory
-                  return _rootDirectory ?? (_rootDirectory = new DirectoryInfo(null, _name, PathFormat.RelativePath));
-               }
-
-               break;
-
-
-            // DiskSpaceInfo related.
-            case 3:
-               if (mode == 0)
-               {
-                  // AvailableFreeSpace, TotalFreeSpace, TotalSize, DiskSpaceInfo
-                  if (!_initDsie)
+                  switch (mode)
                   {
-                     _dsi.Refresh();
-                     _initDsie = true;
+                     case 0:
+                        // IsVolume, VolumeInfo
+                        return _volumeInfo;
+
+
+                     case 1:
+                        // DriveFormat
+                        return null == _volumeInfo ? DriveType.Unknown.ToString() : _volumeInfo.FileSystemName ?? DriveType.Unknown.ToString();
+
+
+                     case 2:
+                        // VolumeLabel
+                        return null == _volumeInfo ? String.Empty : _volumeInfo.Name ?? String.Empty;
+
+                     case 3:
+                        // DriveType
+                        return null == _volumeInfo ? (object)String.Empty : _volumeInfo.DriveType;
                   }
-               }
 
-               break;
-
-            #endregion // Drive
+                  break;
 
 
-            #region Physical Drive
+               // Volume related.
+               case 1:
+                  if (mode == 0)
+                  {
+                     // DosDeviceName
+                     return _dosDeviceName ?? (_dosDeviceName = Volume.QueryDosDevice(_name).FirstOrDefault());
+                  }
 
-            // Physical Drive related.
-            case 4:
-               if (mode == 0)
-               {
-                  return IsUnc
-                     ? null
-                     : (_physicalDriveInfo ?? (_physicalDriveInfo = GetPhysicalDriveInfoCore(_name[0])));
-               }
+                  break;
 
-               return null;
+               #endregion // Volume
 
-               #endregion // Physical Drive
-         }
+
+               #region Drive
+
+               // Drive related.
+               case 2:
+                  if (mode == 0)
+                  {
+                     // RootDirectory
+                     return _rootDirectory ?? (_rootDirectory = new DirectoryInfo(null, _name, PathFormat.RelativePath));
+                  }
+
+                  break;
+
+
+               // DiskSpaceInfo related.
+               case 3:
+                  if (mode == 0)
+                  {
+                     // AvailableFreeSpace, TotalFreeSpace, TotalSize, DiskSpaceInfo
+                     if (!_initDsie)
+                     {
+                        _dsi.Refresh();
+                        _initDsie = true;
+                     }
+                  }
+
+                  break;
+
+               #endregion // Drive
+
+
+               #region Physical Drive
+
+               // Physical Drive related.
+               case 4:
+                  if (mode == 0)
+                  {
+                     return IsUnc
+                        ? null
+                        : (_physicalDriveInfo ?? (_physicalDriveInfo = Device.GetPhysicalDriveInfoCore(_name[0], null)));
+                  }
+
+                  return null;
+
+                  #endregion // Physical Drive
+            }
          //}
          //catch
          //{

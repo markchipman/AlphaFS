@@ -72,7 +72,7 @@ namespace Alphaleonis.Win32.Filesystem
       {
          if (null == handle || handle.IsClosed || handle.IsInvalid)
          {
-            if (null != handle)
+            if (null != handle && !handle.IsClosed)
                handle.Close();
 
             if (throwException)
@@ -95,11 +95,11 @@ namespace Alphaleonis.Win32.Filesystem
       {
          if (null == handle || handle.IsClosed || handle.IsInvalid)
          {
-            if (null != handle)
+            if (null != handle && !handle.IsClosed)
                handle.Close();
 
             if (throwException)
-               throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, Resources.Handle_Is_Invalid_Win32Error, lastError), "handle");
+               throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, Resources.Handle_Is_Invalid_Win32Error, lastError.ToString()), "handle");
 
             return false;
          }
@@ -112,7 +112,7 @@ namespace Alphaleonis.Win32.Filesystem
       /// <param name="handle">The current handle to check.</param>
       /// <param name="lastError">The result of Marshal.GetLastWin32Error()</param>
       /// <param name="path">The path on which the Exception occurred.</param>
-      /// <param name="throwException"><see langword="true"/> will throw an <exception cref="Resources.Handle_Is_Invalid_Win32Error"/>, <see langword="false"/> will not raise this exception..</param>
+      /// <param name="throwException"><see langword="true"/> will throw an Exception, <see langword="false"/> will not raise this exception..</param>
       /// <returns><see langword="true"/> on success, <see langword="false"/> otherwise.</returns>
       /// <exception cref="ArgumentException"/>
       /// <exception cref="Exception"/>
@@ -120,7 +120,7 @@ namespace Alphaleonis.Win32.Filesystem
       {
          if (null == handle || handle.IsClosed || handle.IsInvalid)
          {
-            if (null != handle)
+            if (null != handle && !handle.IsClosed)
                handle.Close();
 
             if (throwException)

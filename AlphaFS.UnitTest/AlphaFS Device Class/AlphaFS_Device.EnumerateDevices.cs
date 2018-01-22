@@ -22,7 +22,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace AlphaFS.UnitTest
@@ -32,31 +31,28 @@ namespace AlphaFS.UnitTest
       [TestMethod]
       public void AlphaFS_Device_EnumerateDevices_Local_Success()
       {
-         Console.WriteLine("\nMSDN Note: Beginning in Windows 8 and Windows Server 2012 functionality to access remote machines has been removed.");
-         Console.WriteLine("You cannot access remote machines when running on these versions of Windows.\n");
+         Console.WriteLine("MSDN Note: Beginning in Windows 8 and Windows Server 2012 functionality to access remote machines has been removed.");
+         Console.WriteLine("You cannot access remote machines when running on these versions of Windows.");
 
-         Device_EnumerateDevices(false);
-      }
+         UnitTestConstants.PrintUnitTestHeader(false);
 
-
-
-
-      private void Device_EnumerateDevices(bool isNetwork)
-      {
-         UnitTestConstants.PrintUnitTestHeader(isNetwork);
 
          var tempPath = UnitTestConstants.LocalHost;
-         var classCnt = 0;
+         var classCount = 0;
 
          foreach (var deviceClass in EnumMemberToList<Alphaleonis.Win32.Filesystem.DeviceGuid>())
          {
-            Console.WriteLine("\n#{0:000}\tClass: [{1}]", ++classCnt, deviceClass);
+            Console.WriteLine();
+            Console.WriteLine("#{0:000}\tClass: [{1}]", ++classCount, deviceClass);
+
 
             foreach (var device in Alphaleonis.Win32.Filesystem.Device.EnumerateDevices(tempPath, deviceClass))
+
                UnitTestConstants.Dump(device, -24);
          }
 
-         if (classCnt == 0)
+
+         if (classCount == 0)
             Assert.Inconclusive("Nothing is enumerated, but it is expected.");
       }
 

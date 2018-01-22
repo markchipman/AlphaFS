@@ -25,36 +25,26 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AlphaFS.UnitTest
 {
-   public partial class DriveInfoTest
+   public partial class AlphaFS_DeviceTest
    {
       // Pattern: <class>_<function>_<scenario>_<expected result>
 
       
       [TestMethod]
-      public void DriveInfo_GetDrives_Local_Success()
+      public void AlphaFS_Device_EnumeratePhysicalDrives_Local_Success()
       {
          UnitTestConstants.PrintUnitTestHeader(false);
 
 
          var driveCount = 0;
-         var drives = Alphaleonis.Win32.Filesystem.DriveInfo.GetDrives().ToList();
+         var drives = Alphaleonis.Win32.Filesystem.Device.EnumeratePhysicalDrives().ToList();
 
          foreach (var drive in drives)
          {
             Console.WriteLine();
-            Console.WriteLine("#{0:000}\tLogical drive: [{1}]", ++driveCount, drive);
+            Console.WriteLine("#{0:000}\tPhysical Drive: [{1}]", ++driveCount, drive);
 
-            UnitTestConstants.Dump(drive, -21);
-
-
-            if (null != drive.PhysicalDriveInfo)
-               UnitTestConstants.Dump(drive.PhysicalDriveInfo, -23, true);
-
-            if (null != drive.DiskSpaceInfo)
-               UnitTestConstants.Dump(drive.DiskSpaceInfo, -26, true);
-
-            if (null != drive.VolumeInfo)
-               UnitTestConstants.Dump(drive.VolumeInfo, -26, true);
+            UnitTestConstants.Dump(drive, -23);
 
 
             Console.WriteLine();
@@ -62,13 +52,6 @@ namespace AlphaFS.UnitTest
 
 
          Assert.IsTrue(drives.Count > 0);
-
-         Assert.AreEqual(drives[0].Name[0], UnitTestConstants.SysDrive[0]);
-
-
-         var sysIO = System.IO.DriveInfo.GetDrives().ToList();
-
-         Assert.AreEqual(sysIO.Count, drives.Count);
       }
    }
 }

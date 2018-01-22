@@ -31,7 +31,7 @@ namespace AlphaFS.UnitTest
 
 
       [TestMethod]
-      public void AlphaFS_Volume_DefineDosDevice_Local_Success()
+      public void AlphaFS_Volume_DefineDosDevice_And_DeleteDosDevice_Local_Success()
       {
          UnitTestConstants.PrintUnitTestHeader(false);
          Console.WriteLine();
@@ -66,6 +66,10 @@ namespace AlphaFS.UnitTest
          try
          {
             Assert.IsTrue(UnitTestConstants.Dump(di, -21));
+
+            if (null != di.VolumeInfo)
+               UnitTestConstants.Dump(di.VolumeInfo, -26, true);
+
 
             Assert.AreEqual(diSysIo.IsReady, di.IsReady);
 

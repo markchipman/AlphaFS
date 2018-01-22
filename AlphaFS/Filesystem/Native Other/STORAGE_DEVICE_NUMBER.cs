@@ -39,10 +39,10 @@ namespace Alphaleonis.Win32.Filesystem
          internal readonly StorageDeviceType DeviceType;
 
          /// <summary>Indicates the number of this device. This value is set to 0xFFFFFFFF (-1) for the disks that represent the physical paths of an MPIO disk.</summary>
-         internal readonly int DeviceNumber;
+         [MarshalAs(UnmanagedType.U4)] internal readonly int DeviceNumber;
 
          /// <summary>Indicates the partition number of the device is returned in this member, if the device can be partitioned. Otherwise, -1 is returned.</summary>
-         internal readonly int PartitionNumber;
+         [MarshalAs(UnmanagedType.U4)] internal readonly int PartitionNumber;
       }
    }
 }

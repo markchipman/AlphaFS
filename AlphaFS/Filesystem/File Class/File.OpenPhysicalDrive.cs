@@ -19,30 +19,31 @@
  *  THE SOFTWARE. 
  */
 
-using System.Collections.Generic;
+using System;
+using Microsoft.Win32.SafeHandles;
+using System.IO;
 using System.Security;
+using System.Security.AccessControl;
 
 namespace Alphaleonis.Win32.Filesystem
 {
-   public sealed partial class DriveInfo
+   partial class File
    {
-      /// <summary>[AlphaFS] Enumerates the drive names of all physical drives on the Computer.</summary>
-      /// <returns>An IEnumerable of type <see cref="DriveInfo"/> that represents the physical drives on the Computer.</returns>      
+
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <returns></returns>
+      /// <exception cref="ArgumentException"/>
+      /// <exception cref="ArgumentNullException"/>
+      /// <exception cref="NotSupportedException"/>
+      /// <exception cref="Exception"/>
+      /// <param name="path"></param>
+      /// <param name="fileSystemRights"></param>
       [SecurityCritical]
-      public static IEnumerable<DriveInfo> EnumeratePhysicalDrives()
+      public static SafeFileHandle OpenPhysicalDrive(string path, FileSystemRights fileSystemRights)
       {
-         return EnumeratePhysicalDrivesCore();
-      }
-
-
-
-
-      /// <summary>Enumerates the drive names of all physical drives on the Computer.</summary>
-      /// <returns>An IEnumerable of type <see cref="DriveInfo"/> that represents the physical drives on the Computer.</returns>      
-      [SecurityCritical]
-      internal static IEnumerable<DriveInfo> EnumeratePhysicalDrivesCore()
-      {
-         return EnumerateLogicalDrivesCore(false, false);
+         return CreateFileCore(null, path, ExtendedFileAttributes.Normal, null, FileMode.Open, fileSystemRights, FileShare.ReadWrite, false, false, PathFormat.LongFullPath);
       }
    }
 }

@@ -22,6 +22,7 @@
 using Alphaleonis.Win32.Network;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Security;
 
 namespace Alphaleonis.Win32.Filesystem
@@ -91,6 +92,10 @@ namespace Alphaleonis.Win32.Filesystem
       public string DevicePath { get; internal set; }
 
 
+      ///// <summary>Represents the device type of a device instance.</summary>
+      //public string DeviceType { get; internal set; }
+
+
       /// <summary>Represents the registry entry name of the driver key for a device instance.</summary>
       public string Driver { get; internal set; }
 
@@ -112,7 +117,8 @@ namespace Alphaleonis.Win32.Filesystem
 
 
       /// <summary>Gets the instance Id of the device.</summary>
-      public string InstanceId { get; internal set; }
+      [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "ID")]
+      public string InstanceID { get; internal set; }
 
 
       /// <summary>Represents the bus-specific physical location of a device instance.</summary>

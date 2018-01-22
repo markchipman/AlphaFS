@@ -27,7 +27,6 @@ using System.Security;
 
 namespace Alphaleonis.Win32.Filesystem
 {
-   /// <summary>Provides static methods to retrieve device resource information from a local or remote host.</summary>
    public static partial class Device
    {
       /// <summary>[AlphaFS] Enumerates all available devices on the local host.</summary>
@@ -51,21 +50,20 @@ namespace Alphaleonis.Win32.Filesystem
       }
       
 
-      
-      
       /// <summary>[AlphaFS] Enumerates all available devices on the local or remote host.</summary>
       [SecurityCritical]
-      internal static IEnumerable<DeviceInfo> EnumerateDevicesCore(SafeHandle safeHandle, string hostName, DeviceGuid deviceInterfaceGuid, bool getAllProperties = true)
+      internal static IEnumerable<DeviceInfo> EnumerateDevicesCore(SafeHandle safeHandle, string hostName, DeviceGuid interfaceGuid, bool getAllProperties = true)
       {
          SafeCmConnectMachineHandle safeMachineHandle;
          var callerHandle = safeHandle != null;
-         var deviceGuid = new Guid(Utils.GetEnumDescription(deviceInterfaceGuid));
+         var deviceGuid = new Guid(Utils.GetEnumDescription(interfaceGuid));
 
 
          // CM_Connect_Machine()
          // MSDN Note: Beginning in Windows 8 and Windows Server 2012 functionality to access remote machines has been removed.
          // You cannot access remote machines when running on these versions of Windows. 
          // http://msdn.microsoft.com/en-us/library/windows/hardware/ff537948%28v=vs.85%29.aspx
+
 
          var lastError = NativeMethods.CM_Connect_Machine(Host.GetUncName(hostName), out safeMachineHandle);
 
@@ -75,96 +73,109 @@ namespace Alphaleonis.Win32.Filesystem
          using (safeMachineHandle)
          {
             // Start at the "Root" of the device tree of the specified machine.
+
             if (!callerHandle)
                safeHandle = NativeMethods.SetupDiGetClassDevsEx(ref deviceGuid, IntPtr.Zero, IntPtr.Zero, NativeMethods.SetupDiGetClassDevsExFlags.Present | NativeMethods.SetupDiGetClassDevsExFlags.DeviceInterface, IntPtr.Zero, hostName, IntPtr.Zero);
-
-            NativeMethods.IsValidHandle(safeHandle, Marshal.GetLastWin32Error());
             
 
             try
             {
                uint memberInterfaceIndex = 0;
-               var deviceInterfaceData = CreateDeviceInterfaceDataInstance();
+               var interfaceStructSize = Marshal.SizeOf(typeof(NativeMethods.SP_DEVICE_INTERFACE_DATA));
+               var dataStructSize = Marshal.SizeOf(typeof(NativeMethods.SP_DEVINFO_DATA));
 
-               // Start enumerating Device Interfaces.
-               while (NativeMethods.SetupDiEnumDeviceInterfaces(safeHandle, IntPtr.Zero, ref deviceGuid, memberInterfaceIndex++, ref deviceInterfaceData))
+
+               // Start enumerating device interfaces.
+
+               do
                {
-                  lastError = Marshal.GetLastWin32Error();
-                  if (lastError != Win32Errors.NO_ERROR)
-                     NativeError.ThrowException(lastError, hostName);
+                  NativeMethods.IsValidHandle(safeHandle, Marshal.GetLastWin32Error());
 
 
-                  var deviceInfoData = CreateDeviceInfoDataInstance();
-                  var deviceInterfaceDetailData = GetDeviceInterfaceDetailDataInstance(safeHandle, deviceInterfaceData, deviceInfoData);
+                  var interfaceData = new NativeMethods.SP_DEVICE_INTERFACE_DATA {cbSize = (uint) interfaceStructSize};
 
-
-                  // Get device interace details.
-                  var success = NativeMethods.SetupDiGetDeviceInterfaceDetail(safeHandle, ref deviceInterfaceData, ref deviceInterfaceDetailData, NativeMethods.DefaultFileBufferSize, IntPtr.Zero, ref deviceInfoData);
+                  var success = NativeMethods.SetupDiEnumDeviceInterfaces(safeHandle, IntPtr.Zero, ref deviceGuid, memberInterfaceIndex++, ref interfaceData);
 
                   lastError = Marshal.GetLastWin32Error();
                   if (!success)
-                     NativeError.ThrowException(lastError, hostName);
-
-
-                  // Create DeviceInfo instance.
-                  // Set DevicePath property of DeviceInfo instance.
-                  var deviceInfo = new DeviceInfo(hostName) {DevicePath = deviceInterfaceDetailData.DevicePath};
-
-
-                  // Current InstanceId is at the "USBSTOR" level, so we
-                  // need up "move up" one level to get to the "USB" level.
-                  uint ptrPrevious;
-
-                  // CM_Get_Parent_Ex()
-                  // Note: Using this function to access remote machines is not supported
-                  // beginning with Windows 8 and Windows Server 2012, as this functionality has been removed.
-                  // http://msdn.microsoft.com/en-us/library/windows/hardware/ff538615%28v=vs.85%29.aspx
-
-                  lastError = NativeMethods.CM_Get_Parent_Ex(out ptrPrevious, deviceInfoData.DevInst, 0, safeMachineHandle);
-
-                  if (lastError != Win32Errors.CR_SUCCESS)
-                     NativeError.ThrowException(lastError, hostName);
-
-
-                  // Now we get the InstanceID of the USB level device.
-                  using (var safeBuffer = new SafeGlobalMemoryBufferHandle(NativeMethods.DefaultFileBufferSize))
                   {
-                     // CM_Get_Device_ID_Ex()
-                     // Note: Using this function to access remote machines is not supported beginning with Windows 8 and Windows Server 2012,
-                     // as this functionality has been removed.
-                     // http://msdn.microsoft.com/en-us/library/windows/hardware/ff538411%28v=vs.85%29.aspx
-
-                     lastError = NativeMethods.CM_Get_Device_ID_Ex(deviceInfoData.DevInst, safeBuffer, (uint) safeBuffer.Capacity, 0, safeMachineHandle);
-
-                     if (lastError != Win32Errors.CR_SUCCESS)
+                     if (lastError != Win32Errors.NO_ERROR && lastError != Win32Errors.ERROR_NO_MORE_ITEMS)
                         NativeError.ThrowException(lastError, hostName);
 
-                     // Add to instance.
-                     deviceInfo.InstanceId = safeBuffer.PtrToStringUni();
+                     break;
                   }
 
 
+                  // Create DeviceInfo instance.
+
+                  var diData = new NativeMethods.SP_DEVINFO_DATA {cbSize = (uint) dataStructSize};
+
+                  var deviceInfo = new DeviceInfo(hostName)
+                  {
+                     ClassGuid = deviceGuid,
+                     DevicePath = GetInterfaceDetails(safeHandle, ref interfaceData, ref diData).DevicePath
+                  };
+
+
                   if (getAllProperties)
-                     SetDeviceProperties(safeHandle, deviceInfo, deviceInfoData);
+                  {
+                     SetDeviceProperties(safeHandle, deviceInfo, diData);
 
-                  else if (deviceInterfaceGuid == DeviceGuid.Disk)
-                     SetPhysicalDiskProperties(safeHandle, deviceInfo, deviceInfoData);
-                     
+                     deviceInfo.InstanceID = GetDeviceInstanceID(safeMachineHandle, hostName, diData);
+                  }
 
-                  
+                  else
+                     SetMinimalDeviceProperties(safeHandle, deviceInfo, diData);
+
+
                   yield return deviceInfo;
 
-
-                  // Get new structure instance.
-                  deviceInterfaceData = CreateDeviceInterfaceDataInstance();
-               }
+               } while (true);
             }
             finally
             {
                // Handle is ours, dispose.
-               if (!callerHandle && null != safeHandle)
+               if (!callerHandle && null != safeHandle && !safeHandle.IsClosed)
                   safeHandle.Close();
             }
+         }
+      }
+
+
+      [SecurityCritical]
+      private static string GetDeviceInstanceID(SafeCmConnectMachineHandle safeMachineHandle, string hostName, NativeMethods.SP_DEVINFO_DATA diData)
+      {
+         // CM_Get_Parent_Ex()
+         // Note: Using this function to access remote machines is not supported
+         // beginning with Windows 8 and Windows Server 2012, as this functionality has been removed.
+         // http://msdn.microsoft.com/en-us/library/windows/hardware/ff538615%28v=vs.85%29.aspx
+
+
+         uint ptrPrevious;
+
+         var lastError = NativeMethods.CM_Get_Parent_Ex(out ptrPrevious, diData.DevInst, 0, safeMachineHandle);
+
+         if (lastError != Win32Errors.CR_SUCCESS)
+            NativeError.ThrowException(lastError, hostName);
+
+
+         // Now we get the InstanceID of the USB level device.
+         using (var safeBuffer = new SafeGlobalMemoryBufferHandle(NativeMethods.DefaultFileBufferSize / 4))
+         {
+            // CM_Get_Device_ID_Ex()
+            // Note: Using this function to access remote machines is not supported beginning with Windows 8 and Windows Server 2012,
+            // as this functionality has been removed.
+            // http://msdn.microsoft.com/en-us/library/windows/hardware/ff538411%28v=vs.85%29.aspx
+
+            lastError = NativeMethods.CM_Get_Device_ID_Ex(diData.DevInst, safeBuffer, (uint) safeBuffer.Capacity, 0, safeMachineHandle);
+
+            if (lastError != Win32Errors.CR_SUCCESS)
+               NativeError.ThrowException(lastError, hostName);
+
+
+            // Device InstanceID.
+
+            return safeBuffer.PtrToStringUni();
          }
       }
    }
