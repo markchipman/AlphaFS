@@ -20,7 +20,10 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Linq;
 using System.Security;
 
 namespace Alphaleonis.Win32.Filesystem
@@ -32,6 +35,7 @@ namespace Alphaleonis.Win32.Filesystem
    {
       [NonSerialized] private string _productID;
       [NonSerialized] private string _vendorID;
+      [NonSerialized] private IEnumerable<string> _volumes;
 
 
       /// <summary>Initializes a PhysicalDriveInfo instance.</summary>
@@ -54,21 +58,9 @@ namespace Alphaleonis.Win32.Filesystem
       public StorageBusType BusType { get; internal set; }
 
       
-      /// <summary>The device type of the physical drive.</summary>
-      public StorageDeviceType DeviceType { get; internal set; }
-
-      
       /// <summary>The index number of the physical drive.</summary>
       public int DeviceNumber { get; internal set; }
 
-
-      /// <summary>The direct disk access (RAW I/O) path of the physical drive.</summary>
-      public string RawPath { get; internal set; }
-
-
-      /// <summary>The logical drive letter that maps the physical drive.</summary>
-      public string LogicalDrive { get; internal set; }
-      
 
       /// <summary>Indicates the partition number of the device is returned in this member, if the device can be partitioned. Otherwise, -1 is returned.</summary>
       public int PartitionNumber { get; internal set; }
@@ -83,10 +75,10 @@ namespace Alphaleonis.Win32.Filesystem
       public bool IsRemovable { get; internal set; }
 
 
-      /// <summary>Returns the product ID or, when not available, the <see cref="RawPath"/> of the physical drive.</summary>
+      /// <summary>Returns the product ID or, when not available, the direct disk access (RAW I/O) path of the physical drive.</summary>
       public string Name
       {
-         get { return _productID ?? RawPath; }
+         get { return !Utils.IsNullOrWhiteSpace(_productID) ? _productID : Path.PhysicalDrivePrefix + DeviceNumber.ToString(CultureInfo.InvariantCulture); }
 
          internal set { _productID = value; }
       }
@@ -108,7 +100,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "ID")]
       public string VendorID
       {
-         get { return _vendorID ?? string.Empty; }
+         get { return !Utils.IsNullOrWhiteSpace(_vendorID) ? _vendorID : string.Empty; }
 
          internal set
          {
@@ -116,6 +108,13 @@ namespace Alphaleonis.Win32.Filesystem
 
             _vendorID = null != value && value.Length > 1 ? value : string.Empty;
          }
+      }
+
+
+      /// <summary>The Volumes located on the physical drive.</summary>
+      public IEnumerable<string> Volumes
+      {
+         get { return _volumes ?? (_volumes = Volume.EnumerateVolumes()); }
       }
    }
 }

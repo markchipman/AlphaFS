@@ -47,7 +47,7 @@ namespace Alphaleonis.Win32.Filesystem
                ? Marshal.OffsetOf(typeof(NativeMethods.MountPointReparseBuffer), "data")
                : Marshal.OffsetOf(typeof(NativeMethods.SymbolicLinkReparseBuffer), "data")).ToInt64());
 
-            var dataBuffer = new byte[NativeMethods.MAXIMUM_REPARSE_DATA_BUFFER_SIZE - dataOffset];
+            var dataBuffer = new byte[MAXIMUM_REPARSE_DATA_BUFFER_SIZE - dataOffset];
 
 
             switch (header.ReparseTag)
@@ -89,7 +89,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       private static SafeGlobalMemoryBufferHandle GetLinkTargetData(SafeFileHandle safeHandle, string reparsePath)
       {
-         var safeBuffer = new SafeGlobalMemoryBufferHandle(NativeMethods.MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+         var safeBuffer = new SafeGlobalMemoryBufferHandle(MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
 
          while (true)
          {

@@ -43,6 +43,8 @@ namespace Alphaleonis.Win32.Filesystem
       #endregion // Private Fields
 
 
+      #region Constructors
+
       /// <summary>Initializes a VolumeInfo instance.</summary>
       /// <exception cref="ArgumentNullException"/>
       /// <exception cref="ArgumentException"/>
@@ -75,7 +77,7 @@ namespace Alphaleonis.Win32.Filesystem
 
          _volumeHandle = null;
       }
-
+      
 
       /// <summary>Initializes a VolumeInfo instance.</summary>
       /// <param name="driveName">A valid drive path or drive letter. This can be either uppercase or lowercase, 'a' to 'z' or a network share in the format: "\\server\share".</param>
@@ -96,6 +98,8 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public VolumeInfo(SafeFileHandle volumeHandle)
       {
+         NativeMethods.IsValidHandle(volumeHandle);
+
          _volumeHandle = volumeHandle;
       }
 
@@ -113,10 +117,19 @@ namespace Alphaleonis.Win32.Filesystem
             Refresh();
       }
 
+      #endregion // Constructors
+
+
+      /// <summary>Returns the full path of the volume.</summary>
+      /// <returns>A string that represents this instance.</returns>
+      public override string ToString()
+      {
+         return Guid;
+      }
 
 
       #region Properties
-      
+
       /// <summary>The specified volume supports preserved case of file names when it places a name on disk.</summary>
       public bool CasePreservedNames
       {
@@ -151,7 +164,7 @@ namespace Alphaleonis.Win32.Filesystem
       /// The DriveType property indicates whether a drive is any of: CDRom, Fixed, Unknown, Network, NoRootDirectory,
       /// Ram, Removable, or Unknown. Values are listed in the <see cref="System.IO.DriveType"/> enumeration.
       /// </remarks>
-      public DriveType DriveType { get; private set; }
+      internal DriveType DriveType { get; private set; }
 
 
       /// <summary>Gets the name of the file system, for example, the FAT file system or the NTFS file system.</summary>
@@ -169,10 +182,7 @@ namespace Alphaleonis.Win32.Filesystem
       {
          get
          {
-            if (Utils.IsNullOrWhiteSpace(_guid))
-               _guid = !Utils.IsNullOrWhiteSpace(FullPath) ? Volume.GetUniqueVolumeNameForPath(FullPath) : null;
-
-            return _guid;
+            return _guid ?? (_guid = !Utils.IsNullOrWhiteSpace(FullPath) ? Volume.GetUniqueVolumeNameForPath(FullPath) : null);
          }
       }
 
@@ -344,33 +354,32 @@ namespace Alphaleonis.Win32.Filesystem
 
 
                lastError = (uint) Marshal.GetLastWin32Error();
-               if (!success)
-               {
-                  switch (lastError)
-                  {
-                     case Win32Errors.ERROR_NOT_READY:
-                        if (!_continueOnAccessError)
-                           throw new DeviceNotReadyException(Name, true);
-                        break;
-
-                     case Win32Errors.ERROR_MORE_DATA:
-                        // With a large enough buffer this code never executes.
-                        volumeNameBuffer.Capacity = volumeNameBuffer.Capacity * 2;
-                        fileSystemNameBuffer.Capacity = fileSystemNameBuffer.Capacity * 2;
-                        break;
-
-                     default:
-                        if (!_continueOnAccessError)
-                           NativeError.ThrowException(lastError, Name);
-                        break;
-                  }
-               }
-
-               else
+               if (success)
                   break;
+
+
+               switch (lastError)
+               {
+                  case Win32Errors.ERROR_NOT_READY:
+                     if (!_continueOnAccessError)
+                        throw new DeviceNotReadyException(Name, true);
+                     break;
+
+                  case Win32Errors.ERROR_MORE_DATA:
+                     // With a large enough buffer this code never executes.
+                     volumeNameBuffer.Capacity = volumeNameBuffer.Capacity * 2;
+                     fileSystemNameBuffer.Capacity = fileSystemNameBuffer.Capacity * 2;
+                     break;
+
+                  default:
+                     if (!_continueOnAccessError)
+                        NativeError.ThrowException(lastError, Name);
+                     break;
+               }
 
             } while (lastError == Win32Errors.ERROR_MORE_DATA);
          }
+
 
          FullPath = Path.GetRegularPathCore(Name, GetFullPathOptions.None, false);
          Name = volumeNameBuffer.ToString();
@@ -383,15 +392,7 @@ namespace Alphaleonis.Win32.Filesystem
 
          DriveType = Volume.GetDriveType(FullPath);
       }
-
-
-      /// <summary>Returns the full path of the volume.</summary>
-      /// <returns>A string that represents this instance.</returns>
-      public override string ToString()
-      {
-         return Guid;
-      }
-
+      
       #endregion // Methods
    }
 }

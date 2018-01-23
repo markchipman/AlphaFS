@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AlphaFS.UnitTest
@@ -94,19 +95,27 @@ namespace AlphaFS.UnitTest
             UnitTestConstants.Dump(expected, -18);
             Console.WriteLine();
          }
-
+         
 
          UnitTestConstants.Dump(actual, -21);
 
 
          if (null != actual.PhysicalDriveInfo)
+         {
             UnitTestConstants.Dump(actual.PhysicalDriveInfo, -23, true);
+
+            foreach (var volume in actual.PhysicalDriveInfo.Volumes)
+               Console.WriteLine(volume);
+         }
 
          if (null != actual.DiskSpaceInfo)
             UnitTestConstants.Dump(actual.DiskSpaceInfo, -26, true);
 
          if (null != actual.VolumeInfo)
             UnitTestConstants.Dump(actual.VolumeInfo, -26, true);
+
+         
+
 
 
          Console.WriteLine();

@@ -99,7 +99,7 @@ namespace Alphaleonis.Win32.Filesystem
                handle.Close();
 
             if (throwException)
-               throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, Resources.Handle_Is_Invalid_Win32Error, lastError.ToString()), "handle");
+               throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, Resources.Handle_Is_Invalid_Win32Error, lastError.ToString(CultureInfo.InvariantCulture)), "handle");
 
             return false;
          }

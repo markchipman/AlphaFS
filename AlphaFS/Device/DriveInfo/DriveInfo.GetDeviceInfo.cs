@@ -19,7 +19,6 @@
  *  THE SOFTWARE. 
  */
 
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -61,11 +60,11 @@ namespace Alphaleonis.Win32.Filesystem
 
                      case 2:
                         // VolumeLabel
-                        return null == _volumeInfo ? String.Empty : _volumeInfo.Name ?? String.Empty;
+                        return null == _volumeInfo ? string.Empty : _volumeInfo.Name ?? string.Empty;
 
                      case 3:
                         // DriveType
-                        return null == _volumeInfo ? (object)String.Empty : _volumeInfo.DriveType;
+                        return null == _volumeInfo ? (object) string.Empty : _volumeInfo.DriveType;
                   }
 
                   break;
@@ -134,7 +133,7 @@ namespace Alphaleonis.Win32.Filesystem
          //{
          //}
 
-         return type == 0 && mode > 0 ? String.Empty : null;
+         return type == 0 && mode > 0 ? string.Empty : null;
       }
    }
 }

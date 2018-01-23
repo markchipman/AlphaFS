@@ -69,18 +69,5 @@ namespace Alphaleonis.Win32.Filesystem
 
       /// <summary>Invalid FileAttributes = -1</summary>
       internal const FileAttributes InvalidFileAttributes = (FileAttributes) (-1);
-
-
-
-
-      /// <summary>MAXIMUM_REPARSE_DATA_BUFFER_SIZE = 16384</summary>
-      internal const int MAXIMUM_REPARSE_DATA_BUFFER_SIZE = 16384;
-
-      /// <summary>REPARSE_DATA_BUFFER_HEADER_SIZE = 8</summary>
-      internal const int REPARSE_DATA_BUFFER_HEADER_SIZE = 8;
-
-
-      internal const uint StorageDeviceProperty = 0; // From STORAGE_PROPERTY_ID enum
-      internal const uint PropertyStandardQuery = 0; // From STORAGE_QUERY_TYPE enum
    }
 }

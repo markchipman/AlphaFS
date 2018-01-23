@@ -35,7 +35,7 @@ namespace Alphaleonis.Win32.Filesystem
          {
             ReparseTag = ReparsePointTag.MountPoint,
             ReparseDataLength = 0,
-            PathBuffer = new byte[NativeMethods.MAXIMUM_REPARSE_DATA_BUFFER_SIZE - 16] // 16368
+            PathBuffer = new byte[MAXIMUM_REPARSE_DATA_BUFFER_SIZE - 16] // 16368
          };
 
 
@@ -44,7 +44,7 @@ namespace Alphaleonis.Win32.Filesystem
             safeBuffer.StructureToPtr(reparseDataBuffer, false);
 
             uint bytesReturned;
-            var success = NativeMethods.DeviceIoControl2(safeHandle, NativeMethods.IoControlCode.FSCTL_DELETE_REPARSE_POINT, safeBuffer, NativeMethods.REPARSE_DATA_BUFFER_HEADER_SIZE, IntPtr.Zero, 0, out bytesReturned, IntPtr.Zero);
+            var success = NativeMethods.DeviceIoControl2(safeHandle, NativeMethods.IoControlCode.FSCTL_DELETE_REPARSE_POINT, safeBuffer, REPARSE_DATA_BUFFER_HEADER_SIZE, IntPtr.Zero, 0, out bytesReturned, IntPtr.Zero);
 
             var lastError = Marshal.GetLastWin32Error();
             if (!success)

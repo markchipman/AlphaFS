@@ -31,6 +31,13 @@ namespace Alphaleonis.Win32.Filesystem
    /// <summary>[AlphaFS] Provides static methods to retrieve device resource information from a local or remote host.</summary>
    public static partial class Device
    {
+      /// <summary>MAXIMUM_REPARSE_DATA_BUFFER_SIZE = 16384</summary>
+      internal const int MAXIMUM_REPARSE_DATA_BUFFER_SIZE = 16384;
+
+      /// <summary>REPARSE_DATA_BUFFER_HEADER_SIZE = 8</summary>
+      internal const int REPARSE_DATA_BUFFER_HEADER_SIZE = 8;
+
+
       /// <summary>Builds a Device Interface Detail Data structure.</summary>
       /// <returns>An initialized NativeMethods.SP_DEVICE_INTERFACE_DETAIL_DATA instance.</returns>
       [SecurityCritical]

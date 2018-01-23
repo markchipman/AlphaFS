@@ -20,7 +20,7 @@
  */
 
 using System;
-using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Security;
@@ -32,7 +32,7 @@ namespace Alphaleonis.Win32.Filesystem
    public static partial class Device
    {
       /// <summary>[AlphaFS] Gets the hardware information such as the serial number, Vendor ID, Product ID.</summary>
-      /// <returns>A <see cref="PhysicalDriveInfo"/> instance that represents the physical drives on the Computer.</returns>      
+      /// <returns>A <see cref="PhysicalDriveInfo"/> instance that represents the physical drive on the Computer.</returns>      
       /// <exception cref="ArgumentException"/>
       /// <exception cref="ArgumentNullException"/>
       /// <exception cref="NotSupportedException"/>
@@ -46,13 +46,14 @@ namespace Alphaleonis.Win32.Filesystem
 
 
       /// <summary>Gets the hardware information such as the serial number, Vendor ID, Product ID.</summary>
-      /// <returns>A <see cref="PhysicalDriveInfo"/> instance that represents the physical drives on the Computer.</returns>      
+      /// <returns>A <see cref="PhysicalDriveInfo"/> instance that represents the physical drive on the Computer.</returns>      
       /// <exception cref="ArgumentException"/>
       /// <exception cref="ArgumentNullException"/>
       /// <exception cref="NotSupportedException"/>
       /// <exception cref="Exception"/>
       /// <param name="driveLetter"></param>
       /// <param name="deviceInfo"></param>
+      [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Object is disposed.")]
       [SecurityCritical]
       internal static PhysicalDriveInfo GetPhysicalDriveInfoCore(char? driveLetter, DeviceInfo deviceInfo)
       {
@@ -93,9 +94,6 @@ namespace Alphaleonis.Win32.Filesystem
          var info = new PhysicalDriveInfo
          {
             DeviceNumber = deviceNumber.DeviceNumber,
-            LogicalDrive = driveLetter.HasValue ? driveLetter.Value.ToString() + Path.VolumeSeparator +Path.DirectorySeparator : string.Empty,
-            RawPath = physicalDrive,
-            DeviceType = deviceNumber.DeviceType,
             PartitionNumber = deviceNumber.PartitionNumber
          };
 
@@ -111,8 +109,8 @@ namespace Alphaleonis.Win32.Filesystem
 
             var storagePropertyQuery = new NativeMethods.STORAGE_PROPERTY_QUERY
             {
-               PropertyId = NativeMethods.StorageDeviceProperty,
-               QueryType = NativeMethods.PropertyStandardQuery
+               PropertyId = 0, // StorageDeviceProperty, from STORAGE_PROPERTY_ID enum.
+               QueryType = 0, // PropertyStandardQuery, from STORAGE_QUERY_TYPE enum
             };
 
 
@@ -147,7 +145,7 @@ namespace Alphaleonis.Win32.Filesystem
 
                long serial;
 
-               if (long.TryParse(safeBuffer.PtrToStringAnsi((int)storageDescriptor.SerialNumberOffset).Trim(), out serial))
+               if (long.TryParse(safeBuffer.PtrToStringAnsi((int) storageDescriptor.SerialNumberOffset).Trim(), out serial))
                   info.SerialNumber = serial;
             }
 

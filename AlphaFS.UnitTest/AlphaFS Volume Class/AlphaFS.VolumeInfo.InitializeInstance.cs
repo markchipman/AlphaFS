@@ -35,6 +35,7 @@ namespace AlphaFS.UnitTest
          if (!UnitTestConstants.IsAdmin())
             Assert.Inconclusive();
 
+
          VolumeInfo_InitializeInstance(false);
          VolumeInfo_InitializeInstance(true);
       }
@@ -43,6 +44,7 @@ namespace AlphaFS.UnitTest
       private void VolumeInfo_InitializeInstance(bool isNetwork)
       {
          UnitTestConstants.PrintUnitTestHeader(isNetwork);
+
 
          var tempPath = UnitTestConstants.SysDrive;
          if (isNetwork)

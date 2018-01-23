@@ -58,7 +58,7 @@ namespace Alphaleonis.Win32.Filesystem
             PrintNameOffset = mountPoint.PrintNameOffset,
             PrintNameLength = mountPoint.PrintNameLength,
 
-            PathBuffer = new byte[NativeMethods.MAXIMUM_REPARSE_DATA_BUFFER_SIZE - 16] // 16368
+            PathBuffer = new byte[MAXIMUM_REPARSE_DATA_BUFFER_SIZE - 16] // 16368
          };
          
          targetDirBytes.CopyTo(reparseDataBuffer.PathBuffer, 0);

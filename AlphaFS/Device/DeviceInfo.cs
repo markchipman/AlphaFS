@@ -116,7 +116,7 @@ namespace Alphaleonis.Win32.Filesystem
       public string HostName { get; internal set; }
 
 
-      /// <summary>Gets the instance Id of the device.</summary>
+      /// <summary>Gets the instance ID of the device.</summary>
       [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "ID")]
       public string InstanceID { get; internal set; }
 
@@ -133,7 +133,7 @@ namespace Alphaleonis.Win32.Filesystem
       public string Manufacturer { get; internal set; }
 
 
-      /// <summary>Encapsulates the physical device location information provided by a device's firmware to Windows.</summary>
+      /// <summary>Encapsulates the physical device location (PDO) information provided by a device's firmware to Windows.</summary>
       public string PhysicalDeviceObjectName { get; internal set; }
 
 
