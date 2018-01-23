@@ -105,7 +105,7 @@ namespace AlphaFS.UnitTest
             UnitTestConstants.Dump(actual.PhysicalDriveInfo, -23, true);
 
             foreach (var volume in actual.PhysicalDriveInfo.Volumes)
-               Console.WriteLine(volume);
+               UnitTestConstants.Dump(volume, -26, true);
          }
 
          if (null != actual.DiskSpaceInfo)

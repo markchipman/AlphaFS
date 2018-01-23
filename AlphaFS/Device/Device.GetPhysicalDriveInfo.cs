@@ -178,17 +178,17 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       private static void SetDeviceFriendlyName(PhysicalDriveInfo info)
       {
-         foreach (var deviceInfo in EnumerateDevicesCore(null, null, DeviceGuid.Disk))
-         {
-            //if (null != deviceInfo.InstanceID && deviceInfo.InstanceID.Equals(info.InstanceID, StringComparison.OrdinalIgnoreCase))
-            //{
-            //   if (!Utils.IsNullOrWhiteSpace(deviceInfo.FriendlyName))
-            //   {
-            //      info.Name = deviceInfo.FriendlyName;
-            //      return;
-            //   }
-            //}
-         }
+         //foreach (var deviceInfo in EnumerateDevicesCore(null, null, DeviceGuid.Disk))
+         //{
+         //   if (null != deviceInfo.InstanceID && deviceInfo.InstanceID.Equals(info.InstanceID, StringComparison.OrdinalIgnoreCase))
+         //   {
+         //      if (!Utils.IsNullOrWhiteSpace(deviceInfo.FriendlyName))
+         //      {
+         //         info.Name = deviceInfo.FriendlyName;
+         //         return;
+         //      }
+         //   }
+         //}
       }
    }
 }
