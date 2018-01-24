@@ -19,7 +19,6 @@
  *  THE SOFTWARE. 
  */
 
-using System;
 using System.Runtime.InteropServices;
 
 namespace Alphaleonis.Win32.Filesystem
@@ -27,7 +26,6 @@ namespace Alphaleonis.Win32.Filesystem
    internal static partial class NativeMethods
    {
       /// <summary>Represents a physical location on a disk. It is the output buffer for the <see cref="IoControlCode.IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS"/> control code.</summary>
-      /// <remarks>MSDN: http://msdn.microsoft.com/en-us/library/aa365727%28VS.85%29.aspx </remarks>
       [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
       internal struct VOLUME_DISK_EXTENTS
       {

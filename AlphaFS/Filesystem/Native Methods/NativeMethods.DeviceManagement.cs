@@ -21,9 +21,9 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Security;
+using System.Threading;
 using Microsoft.Win32.SafeHandles;
 
 namespace Alphaleonis.Win32.Filesystem
@@ -154,6 +154,20 @@ namespace Alphaleonis.Win32.Filesystem
       [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode, EntryPoint = "DeviceIoControl"), SuppressUnmanagedCodeSecurity]
       [return: MarshalAs(UnmanagedType.Bool)]
       internal static extern bool DeviceIoControl2(SafeFileHandle hDevice, [MarshalAs(UnmanagedType.U4)] IoControlCode dwIoControlCode, SafeGlobalMemoryBufferHandle lpInBuffer, [MarshalAs(UnmanagedType.U4)] uint nInBufferSize, IntPtr lpOutBuffer, [MarshalAs(UnmanagedType.U4)] uint nOutBufferSize, [MarshalAs(UnmanagedType.U4)] out uint lpBytesReturned, IntPtr lpOverlapped);
+
+
+      [SuppressMessage("Microsoft.Security", "CA2118:ReviewSuppressUnmanagedCodeSecurityUsage"), SuppressMessage("Microsoft.Security", "CA5122:PInvokesShouldNotBeSafeCriticalFxCopRule")]
+      [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode, EntryPoint = "DeviceIoControl"), SuppressUnmanagedCodeSecurity]
+      [return: MarshalAs(UnmanagedType.Bool)]
+      internal static extern bool DeviceIoControl3(SafeFileHandle hDevice, IoControlCode dwIoControlCode, IntPtr lpInBuffer,
+         int nInBufferSize,
+         SafeGlobalMemoryBufferHandle lpOutBuffer,
+         int nOutBufferSize,
+         out int lpBytesReturned,
+         IntPtr lpOverlapped);
+
+      //internal static extern bool DeviceIoControl3(SafeFileHandle hDevice, [MarshalAs(UnmanagedType.U4)] IoControlCode dwIoControlCode, IntPtr lpInBuffer, [MarshalAs(UnmanagedType.U4)] uint nInBufferSize, SafeGlobalMemoryBufferHandle lpOutBuffer, [MarshalAs(UnmanagedType.U4)] uint nOutBufferSize, [MarshalAs(UnmanagedType.U4)] out uint lpBytesReturned, IntPtr lpOverlapped);
+
 
 
       // Get size of a specified disk.

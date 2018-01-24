@@ -24,6 +24,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Security;
+using System.Threading;
 using Microsoft.Win32.SafeHandles;
 
 namespace Alphaleonis.Win32.Filesystem
@@ -58,6 +59,15 @@ namespace Alphaleonis.Win32.Filesystem
 
          return didd;
       }
+
+
+      [SecurityCritical]
+      private static NativeMethods.STORAGE_DEVICE_NUMBER GetStorageDeviceDriveNumber(SafeFileHandle safeHandle, string path)
+      {
+         using (var safeBuffer = GetDeviceIoData<NativeMethods.STORAGE_DEVICE_NUMBER>(safeHandle, NativeMethods.IoControlCode.IOCTL_STORAGE_GET_DEVICE_NUMBER, path))
+
+            return safeBuffer.PtrToStructure<NativeMethods.STORAGE_DEVICE_NUMBER>(0);
+      }
       
 
       [SecurityCritical]
@@ -89,22 +99,41 @@ namespace Alphaleonis.Win32.Filesystem
       }
       
       
-      [SecurityCritical]
-      internal static T GetDeviceIoData<T>(SafeFileHandle safeHandle, string path)
-      {
-         using (var safeBuffer = GetDeviceIoData<T>(safeHandle, NativeMethods.IoControlCode.IOCTL_STORAGE_GET_DEVICE_NUMBER, path))
-
-            return safeBuffer.PtrToStructure<T>(0);
-      }
-
-
       [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Object needs to be disposed by caller.")]
       [SecurityCritical]
       internal static SafeGlobalMemoryBufferHandle GetDeviceIoData<T>(SafeFileHandle safeHandle, NativeMethods.IoControlCode controlCode, string path, int size = -1)
       {
          NativeMethods.IsValidHandle(safeHandle);
 
+         //var nativeOverlapped = new NativeOverlapped();
+         var bufferSize = size > -1 ? size : Marshal.SizeOf(typeof(T));
 
+         while (true)
+         {
+            uint bytesReturned;
+
+            var safeBuffer = new SafeGlobalMemoryBufferHandle(bufferSize);
+
+            var success = NativeMethods.DeviceIoControl(safeHandle, controlCode, IntPtr.Zero, 0, safeBuffer, (uint) safeBuffer.Capacity, out bytesReturned, IntPtr.Zero);
+
+            var lastError = Marshal.GetLastWin32Error();
+
+            if (success)
+               return safeBuffer;
+
+
+            bufferSize = GetDoubledBufferSizeOrThrowException(lastError, safeBuffer, bufferSize, path);
+         }
+      }
+
+
+      [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Object needs to be disposed by caller.")]
+      [SecurityCritical]
+      internal static SafeGlobalMemoryBufferHandle GetDeviceIoData3<T>(SafeFileHandle safeHandle, NativeMethods.IoControlCode controlCode, string path, int size = -1)
+      {
+         NativeMethods.IsValidHandle(safeHandle);
+
+         //var nativeOverlapped = new NativeOverlapped();
          var bufferSize = size > -1 ? size : Marshal.SizeOf(typeof(T));
 
          while (true)
@@ -133,7 +162,7 @@ namespace Alphaleonis.Win32.Filesystem
             safeBuffer.Close();
 
 
-         switch ((uint)lastError)
+         switch ((uint) lastError)
          {
             case Win32Errors.ERROR_MORE_DATA:
             case Win32Errors.ERROR_INSUFFICIENT_BUFFER:

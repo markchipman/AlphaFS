@@ -57,15 +57,15 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       internal static PhysicalDriveInfo GetPhysicalDriveInfoCore(char? driveLetter, DeviceInfo deviceInfo)
       {
-         // dwDesiredAccess: If this parameter is zero, the application can query certain metadata such as file, directory, or device attributes
+         // FileSystemRights desiredAccess: If this parameter is zero, the application can query certain metadata such as file, directory, or device attributes
          // without accessing that file or device, even if GENERIC_READ access would have been denied.
          // You cannot request an access mode that conflicts with the sharing mode that is specified by the dwShareMode parameter in an open request that already has an open handle.
          //const int dwDesiredAccess = 0;
 
          // Requires elevation for: TotalNumberOfBytes
-         const FileSystemRights dwDesiredAccess = FileSystemRights.Read | FileSystemRights.Write;
+         const FileSystemRights desiredAccess = FileSystemRights.Read | FileSystemRights.Write;
 
-         const bool elevatedAccess = (dwDesiredAccess & FileSystemRights.Read) != 0 && (dwDesiredAccess & FileSystemRights.Write) != 0;
+         const bool elevatedAccess = (desiredAccess & FileSystemRights.Read) != 0 && (desiredAccess & FileSystemRights.Write) != 0;
 
 
          SafeFileHandle safeHandle = null;
@@ -77,9 +77,9 @@ namespace Alphaleonis.Win32.Filesystem
 
          else if (null != deviceInfo)
          {
-            safeHandle = File.OpenPhysicalDrive(deviceInfo.DevicePath, dwDesiredAccess);
+            safeHandle = File.OpenPhysicalDrive(deviceInfo.DevicePath, desiredAccess);
 
-            driveNumber = GetDeviceIoData<NativeMethods.STORAGE_DEVICE_NUMBER>(safeHandle, deviceInfo.DevicePath);
+            driveNumber = GetStorageDeviceDriveNumber(safeHandle, deviceInfo.DevicePath);
          }
 
 
@@ -99,9 +99,19 @@ namespace Alphaleonis.Win32.Filesystem
 
 
 
+         try
+         {
+            GetVolumeDiskExtents(physicalDrive, desiredAccess);
+         }
+         catch (Exception ex)
+         {
+            Console.WriteLine(ex.Message);
+         }
+
 
          if (null == safeHandle)
-            safeHandle = File.OpenPhysicalDrive(physicalDrive, dwDesiredAccess);
+            safeHandle = File.OpenPhysicalDrive(physicalDrive, desiredAccess);
+         
 
          using (safeHandle)
          {

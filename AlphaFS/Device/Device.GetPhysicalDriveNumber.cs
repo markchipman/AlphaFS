@@ -21,7 +21,6 @@
 
 using System;
 using System.Globalization;
-using System.IO;
 using System.Security;
 
 namespace Alphaleonis.Win32.Filesystem
@@ -60,7 +59,7 @@ namespace Alphaleonis.Win32.Filesystem
             throw new ArgumentException(Resources.Argument_must_be_a_drive_letter_from_a_z, "driveLetter");
 
 
-         // dwDesiredAccess: If this parameter is zero, the application can query certain metadata such as file, directory, or device attributes
+         // FileSystemRights desiredAccess: If this parameter is zero, the application can query certain metadata such as file, directory, or device attributes
          // without accessing that file or device, even if GENERIC_READ access would have been denied.
          // You cannot request an access mode that conflicts with the sharing mode that is specified by the dwShareMode parameter in an open request that already has an open handle.
          const int dwDesiredAccess = 0;
@@ -76,7 +75,7 @@ namespace Alphaleonis.Win32.Filesystem
 
          using (var safeHandle = File.OpenPhysicalDrive(physicalDrive, dwDesiredAccess))
 
-            return GetDeviceIoData<NativeMethods.STORAGE_DEVICE_NUMBER>(safeHandle, physicalDrive);
+            return GetStorageDeviceDriveNumber(safeHandle, physicalDrive);
       }
    }
 }
